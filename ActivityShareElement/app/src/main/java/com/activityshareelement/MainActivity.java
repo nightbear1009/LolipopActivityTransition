@@ -9,6 +9,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,20 +29,21 @@ public class MainActivity extends Activity {
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         private ImageView imageView;
-
+        private int mPos;
         public MyViewHolder(View itemView) {
             super(itemView);
             imageView = (ImageView) itemView.findViewById(R.id.img);
             imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    EventBus.getDefault().post(new MyEvent(v));
+                    EventBus.getDefault().post(new MyEvent(v,mPos));
                 }
             });
 
         }
 
-        public void bindview(int pos){
+        public void bindview(int pos) {
+            mPos = pos;
         }
     }
 
@@ -57,22 +59,15 @@ public class MainActivity extends Activity {
         @Override
         public void onBindViewHolder(MyViewHolder holder, int position) {
             holder.bindview(position);
-            if(position == 30) {
-                Picasso.with(holder.itemView.getContext())
-                        .load("http://d1n6pk67leuy4e.cloudfront.net/webapi/images/o/400/400/SalePage/972013/0/17452")
-                        .error(R.drawable.ic_launcher)
-                        .into(((MyViewHolder) holder).imageView);
-            }else{
-                Picasso.with(holder.itemView.getContext())
-                        .load("http")
-                        .error(R.drawable.ic_launcher)
-                        .into(((MyViewHolder) holder).imageView);
-            }
+            Picasso.with(holder.itemView.getContext())
+                    .load(Data.URLS[position])
+                    .error(R.drawable.ic_launcher)
+                    .into(((MyViewHolder) holder).imageView);
         }
 
         @Override
         public int getItemCount() {
-            return 200;
+            return Data.URLS.length;
         }
     }
 
@@ -97,25 +92,33 @@ public class MainActivity extends Activity {
         EventBus.getDefault().unregister(this);
     }
 
-    public void onEventMainThread(MyEvent event){
-        Intent intent = new Intent(this,NextActivity.class);
+    public void onEventMainThread(MyEvent event) {
+        Intent intent = new Intent(this, NextActivity.class);
+        Log.d("Ted","viewname "+NextActivity.VIEW_NAME + event.getmPos());
         ActivityOptions options = ActivityOptions
                 .makeSceneTransitionAnimation(this,
                         Pair.create(event.getView(),
-                                NextActivity.VIEW_NAME));
+                                NextActivity.VIEW_NAME + event.getmPos()));
         startActivity(intent, options.toBundle());
     }
 
     public static class MyEvent {
+        public int getmPos() {
+            return mPos;
+        }
+
         private View view;
+        private int mPos;
+        public MyEvent(View v, int pos) {
+            view = v;
+            mPos = pos;
+
+        }
 
         public View getView() {
             return view;
         }
 
-        public MyEvent(View view) {
 
-            this.view = view;
-        }
     }
 }
